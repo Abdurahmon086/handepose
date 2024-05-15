@@ -7,14 +7,36 @@ import { drawHand } from "./utils";
 import * as fp from "fingerpose";
 import victory from "./victory.png";
 import thumbs_up from "./thumbs_up.png";
+import dislike from "./dislike.png";
+import hello from "./hello.png";
 
 function App() {
   const webcamRef = useRef(null);
   const canvasRef = useRef(null);
 
   const [imgView, setImgView] = useState(null);
-  const images = { thumbs_up: thumbs_up, victory: victory };
+  const images = { thumbs_up: thumbs_up, victory: victory, thumbs_down: dislike, hiHand: hello };
 
+  const thumbsDownGesture = new fp.GestureDescription('thumbs_down');
+  thumbsDownGesture.addCurl(fp.Finger.Thumb, fp.FingerCurl.NoCurl);
+  thumbsDownGesture.addDirection(fp.Finger.Thumb, fp.FingerDirection.VerticalDown, 1.0);
+  thumbsDownGesture.addDirection(fp.Finger.Thumb, fp.FingerDirection.DiagonalDownLeft, 0.9);
+  thumbsDownGesture.addDirection(fp.Finger.Thumb, fp.FingerDirection.DiagonalDownRight, 0.9);
+
+  for (let finger of [fp.Finger.Index, fp.Finger.Middle, fp.Finger.Ring, fp.Finger.Pinky]) {
+    thumbsDownGesture.addCurl(finger, fp.FingerCurl.FullCurl, 1.0);
+    thumbsDownGesture.addCurl(finger, fp.FingerCurl.HalfCurl, 0.9);
+  }
+
+  const hiHand = new fp.GestureDescription('hiHand')
+  hiHand.addCurl(fp.Finger.Thumb, fp.FingerCurl.NoCurl);
+  hiHand.addDirection(fp.Finger.Thumb, fp.FingerDirection.VerticalUp, 1.0);
+  hiHand.addDirection(fp.Finger.Thumb, fp.FingerDirection.DiagonalUpLeft, 0.9);
+  hiHand.addDirection(fp.Finger.Thumb, fp.FingerDirection.DiagonalUpRight, 0.9);
+
+  for (let finger of [fp.Finger.Index, fp.Finger.Middle, fp.Finger.Ring, fp.Finger.Pinky]) {
+    hiHand.addCurl(finger, fp.FingerCurl.NoCurl, 0.9);
+  }
   const runHandpose = async () => {
     const net = await handpose.load();
     setInterval(() => {
@@ -44,9 +66,12 @@ function App() {
         const GE = new fp.GestureEstimator([
           fp.Gestures.VictoryGesture,
           fp.Gestures.ThumbsUpGesture,
+          hiHand,
+          thumbsDownGesture
         ]);
+
         const gesture = await GE.estimate(hand[0].landmarks, 8.5);
-        console.log(gesture, gesture.poseData);
+
         if (gesture.gestures !== undefined && gesture.gestures.length > 0) {
 
           const confidence = gesture.gestures.map(
@@ -54,6 +79,7 @@ function App() {
               return prediction.score
             }
           );
+
           const maxConfidence = confidence.indexOf(
             Math.max.apply(null, confidence)
           );
@@ -62,7 +88,7 @@ function App() {
       } else {
         setImgView('')
       }
-      
+
       const ctx = canvasRef.current.getContext("2d");
       drawHand(hand, ctx);
     }
