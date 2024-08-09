@@ -1,10 +1,18 @@
 import React, { useRef, useState, useEffect } from "react";
-import * as tf from "@tensorflow/tfjs";
+import { drawHand } from "./utils";
 import * as handpose from "@tensorflow-models/handpose";
 import Webcam from "react-webcam";
-import "./App.css";
-import { drawHand } from "./utils";
 import * as fp from "fingerpose";
+import cocoSsd from '@tensorflow-models/coco-ssd'
+
+// imoprt most 
+import * as tf from "@tensorflow/tfjs";
+import "./App.css";
+import '@tensorflow/tfjs-backend-webgl'
+import '@tensorflow/tfjs-backend-cpu'
+
+
+// image
 import victory from "./victory.png";
 import thumbs_up from "./thumbs_up.png";
 import dislike from "./dislike.png";
@@ -16,6 +24,9 @@ function App() {
 
   const [imgView, setImgView] = useState(null);
   const images = { thumbs_up: thumbs_up, victory: victory, thumbs_down: dislike, hiHand: hello };
+
+
+  // add fingerpose
 
   const thumbsDownGesture = new fp.GestureDescription('thumbs_down');
   thumbsDownGesture.addCurl(fp.Finger.Thumb, fp.FingerCurl.NoCurl);
@@ -39,8 +50,10 @@ function App() {
   }
   const runHandpose = async () => {
     const net = await handpose.load();
+    // const model = await cocoSsd.load();
     setInterval(() => {
       detect(net);
+      // objetFinder(model)
     }, 10);
   };
 
@@ -93,6 +106,15 @@ function App() {
       drawHand(hand, ctx);
     }
   };
+
+  // const objetFinder = async (model) => {
+
+  //   // Classify the image.
+  //   const predictions = await model.detect(webcamRef);
+
+  //   console.log('Predictions: ');
+  //   console.log(predictions);
+  // }
 
   useEffect(() => { runHandpose() }, []);
 
